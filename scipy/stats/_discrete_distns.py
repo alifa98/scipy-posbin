@@ -992,6 +992,41 @@ class poisson_gen(rv_discrete):
 poisson = poisson_gen(name="poisson", longname='A Poisson')
 
 
+class poisson_binomial_gen(rv_discrete):
+    r"""A poisson binomial random variable.
+
+    %(before_notes)s
+
+    Notes
+    -----
+    The probability mass function for `poisson_binomial` is:
+    
+    .. math::
+        
+        \f(k) = \sum_{A \in F_k} \prod_{i \in A} p_i \prod_{j \in A^c} (1 - p_j)
+        
+    
+    where :math:`F_k` is the set of all subsets of :math:`k` integers that can be selected from :math:`\{1, 2, 3, \ldots, n\}`.
+    :math:`A^c` is the complement of :math:`A`.
+    
+    The poisson binomial distribution is a generalization of the binomial distribution.
+    The binomial distribution is a special case of the poisson binomial distribution when all the :math:`p_i` are equal.
+    `poisson_binomial` takes :math:`list_p` as list of probabilities of success for each experiment.
+        
+    """
+    def _pmf(self, x):
+        raise NotImplementedError
+    
+    def _cdf(self, x):
+        raise NotImplementedError
+    
+    def _argcheck(self, p_list):
+        return np.all(np.logical_and(np.array(p_list) >= 0, np.array(p_list) <= 1))
+        
+
+
+poisson_binomial = poisson_binomial_gen(name='poisson_binomial')
+
 class planck_gen(rv_discrete):
     r"""A Planck discrete exponential random variable.
 
