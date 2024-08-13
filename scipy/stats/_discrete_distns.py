@@ -1595,15 +1595,38 @@ class poisson_binom_gen(rv_discrete):
         arg0 = np.asarray(args[0])
         base_shape = arg0.shape[0:]
         dtype = arg0.dtype
-        pmf = np.ones((1,) + base_shape, dtype=dtype)
-        for i in range(1, n+1):
-            p_i = args[i - 1]
-            pmf_i = np.ones((i+1,) + base_shape, dtype=dtype)
-            pmf_i[0] = (1 - p_i) * pmf[0]
-            pmf_i[i] = p_i * pmf[i-1]
-            for j in range(1, (i-1) + 1):
-                pmf_i[j] = p_i * pmf[j-1] + (1 - p_i) * pmf[j]
-            pmf = pmf_i
+        # -----------------------------
+        omega = 2 * np.pi / (n + 1)
+        
+        # Compute the characteristic function at t = omega * l for l = 0, 1, ..., n
+        x_l = []
+        for l in range(n + 1):
+            exponent = np.sum([np.log(1 - p + p * np.exp(1j * omega * l)) for p in args]) # sum of the logs for numerical stability
+            x_l.append(np.exp(exponent))
+        
+        # Inverse DFT to get the pmf values (ξ_k)
+        pmf = np.fft.ifft(x_l).real
+        
+        # Now, apply fftshift to correct the order of the result
+        pmf = np.fft.fftshift(pmf)
+        
+        zero_freq_index = (n + 1 ) // 2
+        
+        #shift the pmf to the left
+        pmf = np.roll(pmf, - (zero_freq_index+1))
+        
+        # reverse the pmf 
+        pmf = pmf[::-1]
+        # # ---------------------------
+        # pmf = np.ones((1,) + base_shape, dtype=dtype)
+        # for i in range(1, n+1):
+        #     p_i = args[i - 1]
+        #     pmf_i = np.ones((i+1,) + base_shape, dtype=dtype)
+        #     pmf_i[0] = (1 - p_i) * pmf[0]
+        #     pmf_i[i] = p_i * pmf[i-1]
+        #     for j in range(1, (i-1) + 1):
+        #         pmf_i[j] = p_i * pmf[j-1] + (1 - p_i) * pmf[j]
+        #     pmf = pmf_i
         return pmf
 
     def _pmf(self, k, *args):
